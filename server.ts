@@ -29,7 +29,7 @@ async function startServer() {
   app.get('/api/health', (req, res) => {
     res.json({
       status: 'OK',
-      module: 'SmartShield Group 1 - Static Analysis & Attack Path Search',
+      module: 'SmartShield - Static Delegatecall Analysis & Attack Path Search',
       version: '1.0.0',
     });
   });
@@ -50,7 +50,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[SmartShield Group 1] Server running on http://0.0.0.0:${PORT}`);
+    console.log(`[SmartShield] Server running on http://0.0.0.0:${PORT}`);
   });
 }
 

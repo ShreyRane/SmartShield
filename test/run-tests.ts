@@ -20,7 +20,7 @@ function assert(condition: boolean, testName: string, detail?: string) {
 }
 
 console.log('====================================================');
-console.log('SMARTSHIELD GROUP 1: AUTOMATED TEST SUITE');
+console.log('SMARTSHIELD: AUTOMATED TEST SUITE');
 console.log('Testing Static Analysis & Attack Path Search Engine');
 console.log('====================================================\n');
 
@@ -98,7 +98,7 @@ contract Destroyer {
 `;
 
 // TEST 1: AST extraction
-console.log('TEST GROUP 1: AST Extraction & Contract Parsing');
+console.log('TEST SUITE 1: AST Extraction & Contract Parsing');
 const res1 = AnalyzerService.analyze({
   sources: [{ filename: 'TestDrain.sol', content: testContractSource1 }],
   compilerVersion: '0.8.20',

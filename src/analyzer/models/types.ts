@@ -164,7 +164,53 @@ export interface ContractIR {
 }
 
 export interface CandidateAttackPath {
+  schema_version?: string;
   id: string;
+  contract?: string;
+  vulnerability_type?: 'SELF_DESTRUCT' | 'CURRENCY_SENDING' | 'JUDGMENT_CONDITION' | string;
+  vulnerabilityType: 'SELF_DESTRUCT' | 'ETHER_TRANSFER' | 'JUDGMENT_CONDITION';
+  status: 'CANDIDATE';
+  validationRequired: true;
+
+  entry_point?: {
+    function: string;
+    source_line: number | null;
+  };
+
+  writer?: {
+    function: string;
+    variable: string;
+    source_line: number | null;
+  };
+
+  reader?: {
+    function: string;
+    variable: string;
+    source_line: number | null;
+  };
+
+  sink?: {
+    type: string;
+    function: string;
+    source_line: number | null;
+  };
+
+  delegatecall?: {
+    function: string;
+    source_line: number | null;
+    target: string;
+    target_resolution: string;
+  };
+
+  access_control?: {
+    writer: string;
+    reader: string;
+  };
+
+  evidence?: {
+    reason: string;
+  };
+
   callerContract: string | null;
   calleeContract: string | null;
   delegatecallLocation: {
@@ -172,7 +218,6 @@ export interface CandidateAttackPath {
     line: number | null;
     column: number | null;
   };
-  vulnerabilityType: 'SELF_DESTRUCT' | 'ETHER_TRANSFER' | 'JUDGMENT_CONDITION';
   path: string[];
   vulnerabilityVariable: string;
   writerFunction: string;
@@ -182,13 +227,12 @@ export interface CandidateAttackPath {
     function: string;
   };
   storage: {
+    variable?: string;
     slot: string | null;
     offset: number | null;
     confidence: 'HIGH' | 'MEDIUM' | 'LOW';
   };
   reason: string;
-  status: 'CANDIDATE';
-  validationRequired: true;
 }
 
 export interface AnalysisInput {

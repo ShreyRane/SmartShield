@@ -38,9 +38,9 @@ export const StorageLayoutTab: React.FC<StorageLayoutTabProps> = ({ result }) =>
         <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-400 flex items-start space-x-2">
           <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
           <p>
-            Storage layout is strictly compiler-version dependent. Group 1 calculates contiguous packing for
+            Storage layout is strictly compiler-version dependent. SmartShield calculates contiguous packing for
             primitive types (uint, address, bool, bytesN) and flags dynamic mappings and arrays for extended symbolic
-            keccak256 hash resolution in Group 2.
+            keccak256 hash resolution.
           </p>
         </div>
       </div>

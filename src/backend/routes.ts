@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { GoogleGenAI } from '@google/genai';
 import { Router } from 'express';
 import { AnalyzerService } from '../analyzer/index.ts';
 import { AnalysisInput, CandidateAttackPath } from '../analyzer/models/types.ts';
@@ -13,13 +12,15 @@ import { analysisStore } from './store.ts';
 export const apiRouter = Router();
 
 // POST /api/analyze
+// Accepts { sources: [...] }, { filename, source_code }, or { source }
 apiRouter.post('/analyze', (req, res) => {
   try {
-    let { sources, source, compilerVersion = '0.8.20' } = req.body;
+    let { sources, source, source_code, filename = 'Contract.sol', compilerVersion = '0.8.20' } = req.body;
 
     if (!sources || !Array.isArray(sources) || sources.length === 0) {
-      if (typeof source === 'string' && source.trim()) {
-        sources = [{ filename: 'Contract.sol', content: source }];
+      const code = source_code || source;
+      if (typeof code === 'string' && code.trim()) {
+        sources = [{ filename, content: code }];
       } else {
         return res.status(400).json({ error: 'Solidity source code is required' });
       }
@@ -35,8 +36,13 @@ apiRouter.post('/analyze', (req, res) => {
     analysisStore.setResult(analysisId, result);
 
     return res.json({
-      id: analysisId,
       ...result,
+      status: result.status,
+      analysis_id: analysisId,
+      id: analysisId,
+      contract_summary: result.summary,
+      delegatecalls: result.ir.delegatecalls,
+      candidate_paths: result.candidateAttackPaths,
     });
   } catch (err: any) {
     console.error('Error during analysis:', err);
@@ -45,6 +51,109 @@ apiRouter.post('/analyze', (req, res) => {
       details: err?.message || String(err),
     });
   }
+});
+
+// GET /api/analysis/:id
+apiRouter.get('/analysis/:id', (req, res) => {
+  const result = analysisStore.getResult(req.params.id);
+  if (!result) {
+    return res.status(404).json({ error: `Analysis '${req.params.id}' not found.` });
+  }
+  return res.json(result);
+});
+
+// GET /api/analysis/:id/paths
+apiRouter.get('/analysis/:id/paths', (req, res) => {
+  const result = analysisStore.getResult(req.params.id);
+  if (!result) {
+    return res.status(404).json({ error: `Analysis '${req.params.id}' not found.` });
+  }
+  return res.json(result.candidateAttackPaths);
+});
+
+// GET /api/analysis/:id/contract-ir
+apiRouter.get('/analysis/:id/contract-ir', (req, res) => {
+  const result = analysisStore.getResult(req.params.id);
+  if (!result) {
+    return res.status(404).json({ error: `Analysis '${req.params.id}' not found.` });
+  }
+  return res.json(result.ir);
+});
+
+// GET /api/analysis/:id/storage
+apiRouter.get('/analysis/:id/storage', (req, res) => {
+  const result = analysisStore.getResult(req.params.id);
+  if (!result) {
+    return res.status(404).json({ error: `Analysis '${req.params.id}' not found.` });
+  }
+  return res.json(result.ir.storageLayout);
+});
+
+// GET /api/analysis/:id/graph
+apiRouter.get('/analysis/:id/graph', (req, res) => {
+  const result = analysisStore.getResult(req.params.id);
+  if (!result) {
+    return res.status(404).json({ error: `Analysis '${req.params.id}' not found.` });
+  }
+  return res.json({
+    calls: result.ir.calls,
+    controlFlow: result.ir.controlFlow,
+  });
+});
+
+// GET /api/analysis/:id/package - Complete Machine-Readable Handoff Package (Section 35)
+apiRouter.get('/analysis/:id/package', (req, res) => {
+  const result = analysisStore.getResult(req.params.id);
+  if (!result) {
+    return res.status(404).json({ error: `Analysis '${req.params.id}' not found.` });
+  }
+
+  const manifest = {
+    schema_version: '1.0',
+    package_name: 'SmartShield Analysis Package',
+    analysis_id: req.params.id,
+    timestamp: new Date().toISOString(),
+    tool: 'SmartShield Static Delegatecall Analyzer',
+    methodology: 'DelegateTracker Read-Write Data Flow Capture Algorithm',
+    status: 'STATIC_CANDIDATE_ATTACK_PATHS_GENERATED',
+    handoff_notice:
+      'Candidate attack paths are generated purely via static AST and data-flow analysis. They represent unvalidated attack hypotheses. Symbolic execution and dynamic verification are required for exploitability confirmation.',
+    summary: result.summary,
+  };
+
+  const readWrite = result.ir.functions.map((f) => ({
+    contract: f.contract,
+    function: f.name,
+    reads: f.reads,
+    writes: f.writes,
+    visibility: f.visibility,
+    modifiers: f.modifiers,
+    externalReachability: f.externalReachability,
+  }));
+
+  const sourceMetadata = {
+    compilerVersion: result.ir.compilerVersion,
+    contractsCount: result.summary.contractsCount,
+    functionsCount: result.summary.functionsCount,
+    stateVariablesCount: result.summary.stateVariablesCount,
+    contracts: result.ir.contracts.map((c) => ({
+      name: c.name,
+      kind: c.kind,
+      inheritance: c.inheritance,
+    })),
+  };
+
+  return res.json({
+    'manifest.json': manifest,
+    'contract_ir.json': result.ir,
+    'delegatecalls.json': result.ir.delegatecalls,
+    'read_write.json': readWrite,
+    'call_graph.json': result.ir.calls,
+    'cfg.json': result.ir.controlFlow,
+    'storage_layout.json': result.ir.storageLayout,
+    'candidate_paths.json': result.candidateAttackPaths,
+    'source_metadata.json': sourceMetadata,
+  });
 });
 
 // GET /api/attack-paths
@@ -79,7 +188,7 @@ apiRouter.post('/attack-paths/export', (req, res) => {
 
     const rows = paths.map((p) => [
       p.id,
-      p.vulnerabilityType,
+      p.vulnerability_type || p.vulnerabilityType,
       p.callerContract || 'N/A',
       p.calleeContract || 'N/A',
       p.writerFunction,
@@ -102,11 +211,11 @@ apiRouter.post('/attack-paths/export', (req, res) => {
 
   return res.json({
     timestamp: new Date().toISOString(),
-    tool: 'SmartShield Group 1 - Delegatecall Attack-Path Search',
+    tool: 'SmartShield - Delegatecall Attack-Path Search',
     methodology: 'DelegateTracker Read-Write Data Flow AST Analysis',
     status: 'STATIC_CANDIDATES_GENERATED',
     validationNotice:
-      'Candidate paths are generated by static analysis. They are not confirmed vulnerabilities. Runtime/symbolic validation is required by Group 2.',
+      'Candidate paths are generated by static analysis. They are not confirmed vulnerabilities. Runtime/symbolic validation is required.',
     summary: currentResult?.summary || null,
     candidateAttackPaths: paths,
   });
@@ -186,90 +295,40 @@ apiRouter.get('/demos', (req, res) => {
   return res.json(DEMO_CONTRACTS);
 });
 
-// POST /api/ai-explain-path
-// High thinking security report assistant for candidate attack paths
-apiRouter.post('/ai-explain-path', async (req, res) => {
-  const { path: candidatePath, sourceCode } = req.body;
+// POST /api/explain-path
+// High-clarity, deterministic technical security breakdown (AI-ready structured explanation)
+apiRouter.post('/explain-path', (req, res) => {
+  const { path: candidatePath } = req.body;
 
   if (!candidatePath) {
     return res.status(400).json({ error: 'Candidate attack path data is required.' });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
-    return res.json({
-      explanation: `### Static Candidate Path Assessment: ${candidatePath.id}
-**Type:** ${candidatePath.vulnerabilityType}
-**Vulnerability Variable:** \`${candidatePath.vulnerabilityVariable}\`
-**Path:** \`${candidatePath.writerFunction}()\` -> \`${candidatePath.vulnerabilityVariable}\` -> \`${candidatePath.readerFunction}()\` -> \`${candidatePath.sensitiveOperation.type}\`
+  const explanation = `### Candidate Attack Path Security Assessment: ${candidatePath.id}
 
-**Static Assessment:**
-The static analysis identified a direct data-flow connection between \`${candidatePath.writerFunction}\` which mutates state variable \`${candidatePath.vulnerabilityVariable}\` at storage slot ${candidatePath.storage.slot || '0'}, and \`${candidatePath.readerFunction}\` which evaluates that variable before executing a sensitive ${candidatePath.sensitiveOperation.type} operation.
+**Classification:** ${candidatePath.vulnerability_type || candidatePath.vulnerabilityType}
+**Target Variable:** \`${candidatePath.vulnerabilityVariable}\` (Storage Slot ${candidatePath.storage.slot ?? '0'}, Offset ${candidatePath.storage.offset ?? 0})
 
-*Note: Group 1 establishes this static candidate path. Group 2 symbolic validation is required to verify reachability and constraint satisfiability.*`,
-      mode: 'STATIC_FALLBACK',
-    });
-  }
+#### 1. Read-Write Data Flow Mechanism
+- **Writer Function:** \`${candidatePath.writerFunction}()\` mutates state variable \`${candidatePath.vulnerabilityVariable}\`.
+- **Reader Function:** \`${candidatePath.readerFunction}()\` subsequently reads and evaluates \`${candidatePath.vulnerabilityVariable}\`.
+- **Sink Operation:** ${candidatePath.sensitiveOperation.type} executed inside \`${candidatePath.sensitiveOperation.function}()\`.
 
-  try {
-    const ai = new GoogleGenAI();
-    const prompt = `You are a specialized smart-contract security researcher reviewing a candidate attack path generated by SmartShield Group 1 (inspired by the DelegateTracker static analysis paper).
+#### 2. EVM Storage & Delegatecall Context
+- The variable \`${candidatePath.vulnerabilityVariable}\` occupies EVM storage slot **${candidatePath.storage.slot ?? '0'}**.
+- When an execution passes through a delegatecall context, the callee executes code using the caller's storage context. Any modification of slot ${candidatePath.storage.slot ?? '0'} in the callee will directly overwrite \`${candidatePath.vulnerabilityVariable}\` in the caller contract.
 
-Candidate Attack Path Details:
-ID: ${candidatePath.id}
-Vulnerability Type: ${candidatePath.vulnerabilityType}
-Caller Contract: ${candidatePath.callerContract}
-Callee Contract: ${candidatePath.calleeContract}
-Delegatecall Location: ${JSON.stringify(candidatePath.delegatecallLocation)}
-Writer Function: ${candidatePath.writerFunction}
-Reader Function: ${candidatePath.readerFunction}
-Vulnerability Variable: ${candidatePath.vulnerabilityVariable}
-Storage Slot: ${candidatePath.storage.slot}, Offset: ${candidatePath.storage.offset}
-Reason: ${candidatePath.reason}
+#### 3. Why This is a Candidate Path (Not Confirmed)
+- Static analysis has identified that the function relationship and data-flow reach the sensitive sink.
+- However, static analysis does not evaluate runtime constraint satisfiability (e.g. \`msg.sender\` checks, cryptographic proofs, or branch feasibilities). 
 
-Source Code Context:
-\`\`\`solidity
-${sourceCode || 'Source not provided'}
-\`\`\`
+#### 4. Required Symbolic Validation Objectives
+- Test reachability of \`${candidatePath.writerFunction}()\` under arbitrary attacker identities.
+- Formulate symbolic SMT constraints for \`${candidatePath.readerFunction}()\` require/assert statements.
+- Verify whether storage collision or ownership assignment can be satisfied dynamically.`;
 
-Task:
-Provide a rigorous technical explanation of:
-1. The read-write data flow mechanism between ${candidatePath.writerFunction} and ${candidatePath.readerFunction}.
-2. The EVM storage slot implication (slot ${candidatePath.storage.slot}), especially in the context of delegatecall execution.
-3. Why this remains a CANDIDATE path rather than a confirmed exploit at Stage 1.
-4. Specific symbolic constraints and verification objectives recommended for Group 2 (e.g., Z3 solver satisfiability, msg.sender constraints, path feasibility).
-
-Format cleanly in markdown.`;
-
-    // High thinking mode with gemini-3.1-pro-preview as specified
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.1-pro-preview',
-      contents: prompt,
-      config: {
-        thinkingConfig: {
-          thinkingLevel: 'HIGH' as any,
-        },
-      },
-    });
-
-    const explanation = response.text || 'Unable to generate analysis text.';
-    return res.json({
-      explanation,
-      mode: 'GEMINI_3_1_PRO_HIGH_THINKING',
-    });
-  } catch (err: any) {
-    console.warn('Gemini high thinking explanation failed, falling back to static summary:', err);
-    return res.json({
-      explanation: `### Static Candidate Path Assessment: ${candidatePath.id}
-**Type:** ${candidatePath.vulnerabilityType}
-**Vulnerability Variable:** \`${candidatePath.vulnerabilityVariable}\`
-**Path:** \`${candidatePath.writerFunction}()\` -> \`${candidatePath.vulnerabilityVariable}\` -> \`${candidatePath.readerFunction}()\`
-
-**Reasoning:**
-${candidatePath.reason}
-
-*Note: Group 2 symbolic validation must test reachability constraints for ${candidatePath.writerFunction} and verify if caller identity or slot alignment permits unauthorized execution.*`,
-      mode: 'STATIC_FALLBACK',
-    });
-  }
+  return res.json({
+    explanation,
+    status: 'SUCCESS',
+  });
 });

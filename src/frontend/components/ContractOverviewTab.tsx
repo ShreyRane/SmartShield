@@ -77,11 +77,11 @@ export const ContractOverviewTab: React.FC<ContractOverviewTabProps> = ({ result
         <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
         <div className="space-y-1">
           <p className="font-semibold text-amber-300">
-            Stage 1 Static Candidate Findings Notice (DelegateTracker Alignment)
+            Static Candidate Findings Notice (DelegateTracker Alignment)
           </p>
           <p className="text-slate-300 leading-relaxed">
             All detected paths and delegatecall operations are static data-flow candidates. None are claimed to be confirmed
-            exploits at this stage. Group 2 symbolic constraint checking and dynamic execution are required for verification.
+            exploits at this stage. Symbolic constraint checking and dynamic execution are required for verification.
           </p>
         </div>
       </div>

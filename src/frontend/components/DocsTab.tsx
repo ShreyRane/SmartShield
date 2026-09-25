@@ -12,7 +12,7 @@ export const DocsTab: React.FC = () => {
       {/* Overview Card */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl space-y-4">
         <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold uppercase font-mono">
-          <span>SmartShield • Group 1 Architecture & Specifications</span>
+          <span>SmartShield • Static Architecture & Specifications</span>
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
@@ -30,7 +30,7 @@ export const DocsTab: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
           <div className="p-4 rounded-xl bg-slate-950 border border-blue-500/30">
-            <span className="text-xs font-bold text-blue-400 uppercase font-mono">Stage 1: Group 1 Scope (This System)</span>
+            <span className="text-xs font-bold text-blue-400 uppercase font-mono">Stage 1: Static Analysis Scope (This Engine)</span>
             <ul className="mt-2 space-y-1.5 text-xs text-slate-400">
               <li>• AST Information Extraction (Contracts, Functions, Modifiers)</li>
               <li>• EVM Storage Slot & Offset Packing Modeling</li>
@@ -41,7 +41,7 @@ export const DocsTab: React.FC = () => {
           </div>
 
           <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-            <span className="text-xs font-bold text-slate-400 uppercase font-mono">Stage 2: Group 2 Scope (Future Module)</span>
+            <span className="text-xs font-bold text-slate-400 uppercase font-mono">Stage 2: Validation Scope (Handoff Target)</span>
             <ul className="mt-2 space-y-1.5 text-xs text-slate-500">
               <li>• Symbolic Execution (Z3 / constraint solvers)</li>
               <li>• Dynamic Execution & Path Feasibility Testing</li>
@@ -59,7 +59,7 @@ export const DocsTab: React.FC = () => {
               This module strictly outputs <code className="text-amber-300 font-mono">status: "CANDIDATE"</code> and{' '}
               <code className="text-amber-300 font-mono">validationRequired: true</code>. Finding a delegatecall or
               a read-write relationship is a candidate attack path; it is NOT a confirmed vulnerability until validated
-              dynamically or symbolically by Group 2.
+              dynamically or symbolically in Stage 2.
             </p>
           </div>
         </div>
@@ -109,11 +109,11 @@ export const DocsTab: React.FC = () => {
         </div>
       </div>
 
-      {/* REST API Endpoints for Group 2 Integration */}
+      {/* REST API Endpoints & Machine-Readable Handoff */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl space-y-6">
         <h2 className="text-lg font-bold text-white flex items-center space-x-2">
           <GitBranch className="w-5 h-5 text-blue-400" />
-          <span>REST API Endpoints for Group 2 Integration</span>
+          <span>REST API Endpoints & Machine-Readable Handoff</span>
         </h2>
 
         <div className="space-y-3 font-mono text-xs">

@@ -4,40 +4,18 @@
  */
 
 import React from 'react';
-import {
-  Shield,
-  FileCode,
-  Layers,
-  GitCompare,
-  Network,
-  Share2,
-  AlertTriangle,
-  Flame,
-  Database,
-  Download,
-  BookOpen,
-  Sparkles,
-} from 'lucide-react';
+import { Shield, Clock, HelpCircle, Activity } from 'lucide-react';
 
-export type TabType =
-  | 'home'
-  | 'editor'
-  | 'overview'
-  | 'readwrite'
-  | 'callgraph'
-  | 'delegatecalls'
-  | 'sensitive'
-  | 'attackpaths'
-  | 'storage'
-  | 'export'
-  | 'docs';
+export type MainTabType = 'home' | 'scan' | 'results' | 'reports';
 
 interface NavbarProps {
-  activeTab: TabType;
-  setActiveTab: (tab: TabType) => void;
+  activeTab: MainTabType;
+  setActiveTab: (tab: MainTabType) => void;
   candidateCount: number;
   hasAnalysis: boolean;
-  compilerVersion: string;
+  historyCount: number;
+  onOpenHistory: () => void;
+  onOpenHelp: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -45,96 +23,117 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveTab,
   candidateCount,
   hasAnalysis,
-  compilerVersion,
+  historyCount,
+  onOpenHistory,
+  onOpenHelp,
 }) => {
-  const navItems = [
-    { id: 'home' as TabType, label: 'Home', icon: Shield },
-    { id: 'editor' as TabType, label: 'Source Analyzer', icon: FileCode },
-    { id: 'overview' as TabType, label: 'Overview', icon: Layers, requiresAnalysis: true },
-    { id: 'readwrite' as TabType, label: 'Read/Write', icon: GitCompare, requiresAnalysis: true },
-    { id: 'callgraph' as TabType, label: 'Call Graph', icon: Network, requiresAnalysis: true },
-    { id: 'delegatecalls' as TabType, label: 'Delegatecalls', icon: Share2, requiresAnalysis: true },
-    { id: 'sensitive' as TabType, label: 'Sensitive Ops', icon: AlertTriangle, requiresAnalysis: true },
-    {
-      id: 'attackpaths' as TabType,
-      label: 'Attack Paths',
-      icon: Flame,
-      badge: candidateCount > 0 ? candidateCount : undefined,
-      requiresAnalysis: true,
-    },
-    { id: 'storage' as TabType, label: 'Storage Layout', icon: Database, requiresAnalysis: true },
-    { id: 'export' as TabType, label: 'Export', icon: Download, requiresAnalysis: true },
-    { id: 'docs' as TabType, label: 'Methodology & API', icon: BookOpen },
-  ];
-
   return (
-    <header className="sticky top-0 z-50 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 text-slate-100">
+    <header className="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/70 text-slate-100 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo & Branding */}
+          {/* Brand */}
           <div
-            className="flex items-center space-x-3 cursor-pointer select-none"
+            className="flex items-center space-x-2.5 cursor-pointer select-none group"
             onClick={() => setActiveTab('home')}
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 border border-blue-400/30">
-              <Shield className="w-5 h-5 text-white" />
+            <div className="w-8 h-8 rounded-xl bg-blue-600/20 border border-blue-500/40 text-blue-400 flex items-center justify-center shadow-lg shadow-blue-500/10 group-hover:border-blue-400/60 transition-all duration-200">
+              <Shield className="w-4 h-4 text-cyan-400" />
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-extrabold tracking-wider text-base bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-                  SMARTSHIELD
-                </span>
-                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                  GROUP 1
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400">Delegatecall Attack-Path Search & Static Analysis</p>
-            </div>
+            <span className="font-extrabold tracking-tight text-base text-white group-hover:text-cyan-200 transition-colors">
+              SmartShield
+            </span>
           </div>
 
-          {/* Right Status & Meta */}
-          <div className="hidden md:flex items-center space-x-3 text-xs">
-            <div className="px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-400">
-              Compiler: <span className="font-mono text-cyan-400 font-medium">{compilerVersion}</span>
-            </div>
-            <div className="px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-300 font-medium flex items-center space-x-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              <span>Static Candidates Only</span>
-            </div>
+          {/* Primary 4-Tab Navigation */}
+          <nav className="flex items-center space-x-1 sm:space-x-1.5 p-1 bg-slate-900/70 rounded-xl border border-slate-800/60">
+            <button
+              onClick={() => setActiveTab('home')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                activeTab === 'home'
+                  ? 'bg-blue-600/20 text-cyan-300 border border-blue-500/30 shadow-sm shadow-cyan-950/50'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
+              }`}
+            >
+              HOME
+            </button>
+
+            <button
+              onClick={() => setActiveTab('scan')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                activeTab === 'scan'
+                  ? 'bg-blue-600/20 text-cyan-300 border border-blue-500/30 shadow-sm shadow-cyan-950/50'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
+              }`}
+            >
+              SCAN CONTRACT
+            </button>
+
+            <button
+              onClick={() => hasAnalysis && setActiveTab('results')}
+              disabled={!hasAnalysis}
+              className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                activeTab === 'results'
+                  ? 'bg-blue-600/20 text-cyan-300 border border-blue-500/30 shadow-sm shadow-cyan-950/50'
+                  : !hasAnalysis
+                  ? 'text-slate-600 cursor-not-allowed border border-transparent'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
+              }`}
+            >
+              <span>SECURITY RESULTS</span>
+              {hasAnalysis && (
+                <span
+                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold font-mono tabular-nums leading-none ${
+                    candidateCount > 0
+                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-sm shadow-rose-950'
+                      : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                  }`}
+                >
+                  {candidateCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => hasAnalysis && setActiveTab('reports')}
+              disabled={!hasAnalysis}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                activeTab === 'reports'
+                  ? 'bg-blue-600/20 text-cyan-300 border border-blue-500/30 shadow-sm shadow-cyan-950/50'
+                  : !hasAnalysis
+                  ? 'text-slate-600 cursor-not-allowed border border-transparent'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
+              }`}
+            >
+              REPORTS & EXPORT
+            </button>
+          </nav>
+
+          {/* Secondary Utilities: History & Help */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={onOpenHistory}
+              title="Recent Scans"
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition cursor-pointer text-xs font-medium"
+            >
+              <Clock className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="hidden md:inline">HISTORY</span>
+              {historyCount > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 rounded bg-blue-950/80 text-[10px] text-cyan-300 font-mono tabular-nums border border-blue-800/50 leading-none">
+                  {historyCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={onOpenHelp}
+              title="Methodology & Documentation"
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition cursor-pointer text-xs font-medium"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="hidden md:inline">METHODOLOGY</span>
+            </button>
           </div>
         </div>
-
-        {/* Navigation Bar / Tabs */}
-        <nav className="flex space-x-1 overflow-x-auto pb-2 scrollbar-none">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            const isDisabled = item.requiresAnalysis && !hasAnalysis;
-
-            return (
-              <button
-                key={item.id}
-                onClick={() => !isDisabled && setActiveTab(item.id)}
-                disabled={isDisabled}
-                className={`flex items-center space-x-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap ${
-                  isActive
-                    ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30 shadow-sm'
-                    : isDisabled
-                    ? 'text-slate-600 cursor-not-allowed'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{item.label}</span>
-                {item.badge !== undefined && (
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
       </div>
     </header>
   );

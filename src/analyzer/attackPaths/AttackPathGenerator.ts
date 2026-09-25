@@ -84,10 +84,54 @@ export class AttackPathGenerator {
         relevantDelegatecall = delegatecalls[0];
       }
 
-      const id = `AP-${String(counter++).padStart(3, '0')}`;
+      const id = `PATH-${String(counter++).padStart(3, '0')}`;
+      const contract = readerFunction.contract || callerContractName || 'Contract';
+      const vulnTypeStandard = match.vulnerabilityType === 'ETHER_TRANSFER' ? 'CURRENCY_SENDING' : match.vulnerabilityType;
 
       const candidatePath: CandidateAttackPath = {
+        schema_version: '1.0',
         id,
+        contract,
+        vulnerability_type: vulnTypeStandard,
+        vulnerabilityType: match.vulnerabilityType,
+        status: 'CANDIDATE',
+        validationRequired: true,
+
+        entry_point: {
+          function: writerFunction.name,
+          source_line: writerFunction.sourceLocation.line,
+        },
+        writer: {
+          function: writerFunction.name,
+          variable: vulnerabilityVariable,
+          source_line: writerFunction.sourceLocation.line,
+        },
+        reader: {
+          function: readerFunction.name,
+          variable: vulnerabilityVariable,
+          source_line: readerFunction.sourceLocation.line,
+        },
+        sink: {
+          type: sensitiveOp.type,
+          function: sensitiveOp.function,
+          source_line: sensitiveOp.sourceLocation.line,
+        },
+        delegatecall: relevantDelegatecall
+          ? {
+              function: relevantDelegatecall.function,
+              source_line: relevantDelegatecall.sourceLocation.line,
+              target: relevantDelegatecall.targetExpression,
+              target_resolution: relevantDelegatecall.targetType.toUpperCase(),
+            }
+          : undefined,
+        access_control: {
+          writer: writerFunction.modifiers.length > 0 ? writerFunction.modifiers.join(', ') : writerFunction.visibility.toUpperCase(),
+          reader: readerFunction.modifiers.length > 0 ? readerFunction.modifiers.join(', ') : readerFunction.visibility.toUpperCase(),
+        },
+        evidence: {
+          reason,
+        },
+
         callerContract: relevantDelegatecall ? relevantDelegatecall.contract : (readerFunction.contract || null),
         calleeContract:
           relevantDelegatecall && relevantDelegatecall.targetContractName
@@ -100,8 +144,7 @@ export class AttackPathGenerator {
           line: relevantDelegatecall ? relevantDelegatecall.sourceLocation.line : null,
           column: relevantDelegatecall ? relevantDelegatecall.sourceLocation.column : null,
         },
-        vulnerabilityType: match.vulnerabilityType,
-        path: [writerFunction.name, readerFunction.name],
+        path: [writerFunction.name, vulnerabilityVariable, readerFunction.name, sensitiveOp.type.toLowerCase()],
         vulnerabilityVariable,
         writerFunction: writerFunction.name,
         readerFunction: readerFunction.name,
@@ -110,13 +153,12 @@ export class AttackPathGenerator {
           function: sensitiveOp.function,
         },
         storage: {
+          variable: vulnerabilityVariable,
           slot: slotInfo ? slotInfo.slot : '0',
           offset: slotInfo ? slotInfo.offset : 0,
           confidence: slotInfo && !slotInfo.isComplex ? confidence : 'LOW',
         },
         reason,
-        status: 'CANDIDATE',
-        validationRequired: true,
       };
 
       candidatePaths.push(candidatePath);
