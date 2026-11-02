@@ -4,7 +4,7 @@
  */
 
 import { ASTAnalyzer } from '../ast/ASTAnalyzer.ts';
-import { FunctionInfo, ReadWriteInfo, StateVariableInfo } from '../models/types.ts';
+import type { FunctionInfo, ReadWriteInfo, StateVariableInfo } from '../models/types.ts';
 
 export class ReadWriteAnalyzer {
   /**

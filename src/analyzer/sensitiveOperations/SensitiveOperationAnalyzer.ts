@@ -4,7 +4,7 @@
  */
 
 import { ASTAnalyzer } from '../ast/ASTAnalyzer.ts';
-import { FunctionInfo, SensitiveOperation, StateVariableInfo } from '../models/types.ts';
+import type { FunctionInfo, SensitiveOperation, StateVariableInfo } from '../models/types.ts';
 
 export class SensitiveOperationAnalyzer {
   /**

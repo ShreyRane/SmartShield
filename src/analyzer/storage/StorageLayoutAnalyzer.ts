@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { StateVariableInfo, StorageSlotInfo } from '../models/types.ts';
+import type { StateVariableInfo, StorageSlotInfo } from '../models/types.ts';
 
 export class StorageLayoutAnalyzer {
   /**

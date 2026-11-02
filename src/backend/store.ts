@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AnalysisResult, CandidateAttackPath, ContractInfo, ContractIR } from '../analyzer/models/types.ts';
+import type { AnalysisResult, CandidateAttackPath, ContractInfo, ContractIR } from '../analyzer/models/types.ts';
 
 // In-memory store for REST endpoints
 class AnalysisStore {

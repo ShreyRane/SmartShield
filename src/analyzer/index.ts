@@ -10,7 +10,7 @@ import { CFGAnalyzer } from './cfg/CFGAnalyzer.ts';
 import { ContractAnalyzer } from './contracts/ContractAnalyzer.ts';
 import { ReadWriteAnalyzer } from './dataflow/ReadWriteAnalyzer.ts';
 import { DelegatecallAnalyzer } from './delegatecall/DelegatecallAnalyzer.ts';
-import {
+import type {
   AnalysisInput,
   AnalysisResult,
   CFGFunction,

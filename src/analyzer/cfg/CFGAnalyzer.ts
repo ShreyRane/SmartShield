@@ -4,7 +4,7 @@
  */
 
 import { ASTAnalyzer } from '../ast/ASTAnalyzer.ts';
-import { CFGFunction, CFGNode, FunctionInfo, StateVariableInfo } from '../models/types.ts';
+import type { CFGFunction, CFGNode, FunctionInfo, StateVariableInfo } from '../models/types.ts';
 
 export class CFGAnalyzer {
   /**

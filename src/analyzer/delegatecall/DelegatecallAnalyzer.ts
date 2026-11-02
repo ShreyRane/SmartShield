@@ -4,7 +4,7 @@
  */
 
 import { ASTAnalyzer } from '../ast/ASTAnalyzer.ts';
-import { DelegatecallInfo, FunctionInfo, StateVariableInfo } from '../models/types.ts';
+import type { DelegatecallInfo, FunctionInfo, StateVariableInfo } from '../models/types.ts';
 
 export class DelegatecallAnalyzer {
   /**

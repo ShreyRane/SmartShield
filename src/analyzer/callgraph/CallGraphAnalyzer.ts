@@ -4,7 +4,7 @@
  */
 
 import { ASTAnalyzer } from '../ast/ASTAnalyzer.ts';
-import { CallGraphEdge, CallGraphInfo, FunctionInfo } from '../models/types.ts';
+import type { CallGraphEdge, CallGraphInfo, FunctionInfo } from '../models/types.ts';
 
 export class CallGraphAnalyzer {
   /**

@@ -5,7 +5,7 @@
 
 import { Router } from 'express';
 import { AnalyzerService } from '../analyzer/index.ts';
-import { AnalysisInput, CandidateAttackPath } from '../analyzer/models/types.ts';
+import type { AnalysisInput, CandidateAttackPath } from '../analyzer/models/types.ts';
 import { DEMO_CONTRACTS } from '../analyzer/examples/demoContracts.ts';
 import { analysisStore } from './store.ts';
 

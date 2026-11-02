@@ -4,7 +4,7 @@
  */
 
 import { AnalyzerService } from '../src/analyzer/index.ts';
-import { AnalysisInput } from '../src/analyzer/models/types.ts';
+import type { AnalysisInput } from '../src/analyzer/models/types.ts';
 
 let passed = 0;
 let failed = 0;

@@ -5,7 +5,7 @@
 
 import { ASTAnalyzer } from '../ast/ASTAnalyzer.ts';
 import { FunctionAnalyzer } from '../functions/FunctionAnalyzer.ts';
-import { ContractInfo, FunctionInfo, StateVariableInfo } from '../models/types.ts';
+import type { ContractInfo, FunctionInfo, StateVariableInfo } from '../models/types.ts';
 
 export class ContractAnalyzer {
   /**

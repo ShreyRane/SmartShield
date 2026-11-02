@@ -4,7 +4,7 @@
  */
 
 import { ASTAnalyzer } from '../ast/ASTAnalyzer.ts';
-import { FunctionInfo, ParameterInfo, SourceLocation } from '../models/types.ts';
+import type { FunctionInfo, ParameterInfo, SourceLocation } from '../models/types.ts';
 
 export class FunctionAnalyzer {
   /**
